@@ -1,0 +1,38 @@
+{
+    "name": "tbcd/file-messenger",
+    "type": "library",
+    "description": "",
+    "authors": [
+        {
+            "name": "Thomas Beauchataud"
+        }
+    ],
+    "keywords": [
+        "HFSQL",
+        "Doctrine",
+        "ODBC"
+    ],
+    "license": "MIT",
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "version": "1.0.0",
+    "require": {
+        "php": ">=8.1",
+        "symfony/messenger": "^6.0",
+        "league/flysystem": "3.0",
+        "league/flysystem-sftp-v3": "3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "TBCD\\Messenger\\FileTransport\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "TBCD\\Messenger\\FileTransport\\Tests\\": "tests/"
+        }
+    }
+}
