@@ -25,7 +25,7 @@ framework:
             # https://symfony.com/doc/current/messenger.html#transport-configuration
             sftp:
                 dsn: 'sftp://foo:bar@localhost:22/rootPath'
-            sftp:
+            ftp:
                 dsn: 'ftp://foo:bar@localhost:21/rootPath'
             local:
                 dsn: 'local://./rootPath'
