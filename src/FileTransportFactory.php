@@ -15,6 +15,7 @@
 namespace TBCD\Messenger\FileTransport;
 
 use League\Flysystem\Filesystem;
+use Symfony\Component\Messenger\Transport\Serialization\PhpSerializer;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 use Symfony\Component\Messenger\Transport\TransportFactoryInterface;
 use Symfony\Component\Messenger\Transport\TransportInterface;
@@ -32,7 +33,7 @@ final class FileTransportFactory implements TransportFactoryInterface
     }
 
 
-    public function createTransport(string $dsn, array $options, SerializerInterface $serializer): TransportInterface
+    public function createTransport(string $dsn, array $options, SerializerInterface $serializer = new PhpSerializer()): TransportInterface
     {
         $filesystemAdapter = $this->filesystemAdapterFactory->create($dsn, $options);
         $filesystem = new Filesystem($filesystemAdapter);

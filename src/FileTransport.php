@@ -19,6 +19,7 @@ use League\Flysystem\FilesystemOperator;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Transport\Receiver\ListableReceiverInterface;
 use Symfony\Component\Messenger\Transport\Receiver\MessageCountAwareInterface;
+use Symfony\Component\Messenger\Transport\Serialization\PhpSerializer;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 use Symfony\Component\Messenger\Transport\SetupableTransportInterface;
 use Symfony\Component\Messenger\Transport\TransportInterface;
@@ -31,7 +32,7 @@ final class FileTransport implements TransportInterface, MessageCountAwareInterf
     private FileReceiver $receiver;
     private FileSender $sender;
 
-    public function __construct(FilesystemOperator $filesystemOperator, SerializerInterface $serializer)
+    public function __construct(FilesystemOperator $filesystemOperator, SerializerInterface $serializer = new PhpSerializer())
     {
         $this->filesystemOperator = $filesystemOperator;
         $this->serializer = $serializer;

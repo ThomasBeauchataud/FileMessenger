@@ -14,142 +14,37 @@
 
 namespace TBCD\Messenger\FileTransport\Tests;
 
-use League\Flysystem\Filesystem;
-use League\Flysystem\Local\LocalFilesystemAdapter;
 use PHPUnit\Framework\TestCase;
-use TBCD\Messenger\FileTransport\FileReceivedStamp;
-use TBCD\Messenger\FileTransport\FileReceiver;
+use TBCD\Messenger\FileTransport\FileTransport;
+use TBCD\Messenger\FileTransport\FileTransportFactory;
 
-class FileReceiverTest extends TestCase
+class FileTransportFactoryTest extends TestCase
 {
 
-    protected function setUp(): void
+    public function testLocal(): void
     {
-        $tmpDirectory = sys_get_temp_dir() . '/symfony-test';
-        foreach (scandir($tmpDirectory) as $file) {
-            $filepath = "$tmpDirectory/$file";
-            if (is_file($filepath)) {
-                unlink($filepath);
-            }
-        }
+        $dsn = 'local://./rootPath';
+        $fileTransportFactory = new FileTransportFactory();
+        $this->assertTrue($fileTransportFactory->supports($dsn, []));
+        $transport = $fileTransportFactory->createTransport($dsn, []);
+        $this->assertInstanceOf(FileTransport::class, $transport);
     }
 
-    public function testGet(): void
+    public function testFtp(): void
     {
-        $tmpDirectory = sys_get_temp_dir() . '/symfony-test';
-        $filename = uniqid();
-        $filepath = "$tmpDirectory/$filename";
-        $content = uniqid();
-        file_put_contents($filepath, $content);
-        $filesystem = new Filesystem(new LocalFilesystemAdapter($tmpDirectory));
-        $serializer = new SerializerTest();
-        $fileReceiver = new FileReceiver($filesystem, $serializer);
-        $envelopes = $fileReceiver->get();
-        $this->assertCount(1, $envelopes);
-        $envelopes = is_array($envelopes) ? $envelopes : [...$envelopes];
-        $envelope = array_shift($envelopes);
-        $message = $envelope->getMessage();
-        $this->assertEquals($content, $message->getContent());
-        $fileReceivedStamp = $envelope->last(FileReceivedStamp::class);
-        $this->assertNotNull($fileReceivedStamp);
-        $this->assertEquals($filename, $fileReceivedStamp->getFilepath());
+        $dsn = 'ftp://foo:bar@localhost:21/rootPath';
+        $fileTransportFactory = new FileTransportFactory();
+        $this->assertTrue($fileTransportFactory->supports($dsn, []));
+        $transport = $fileTransportFactory->createTransport($dsn, []);
+        $this->assertInstanceOf(FileTransport::class, $transport);
     }
 
-    public function testAck(): void
+    public function testSftp(): void
     {
-        $tmpDirectory = sys_get_temp_dir() . '/symfony-test';
-        $filename = uniqid();
-        $filepath = "$tmpDirectory/$filename";
-        $content = uniqid();
-        file_put_contents($filepath, $content);
-        $filesystem = new Filesystem(new LocalFilesystemAdapter($tmpDirectory));
-        $serializer = new SerializerTest();
-        $fileReceiver = new FileReceiver($filesystem, $serializer);
-        $envelopes = $fileReceiver->get();
-        $this->assertCount(1, $envelopes);
-        $envelopes = is_array($envelopes) ? $envelopes : [...$envelopes];
-        $envelope = array_shift($envelopes);
-        $fileReceiver->ack($envelope);
-        $fileContent = file_get_contents($filepath);
-        $this->assertFalse($fileContent);
-    }
-
-    public function testReject(): void
-    {
-        $tmpDirectory = sys_get_temp_dir() . '/symfony-test';
-        $filename = uniqid();
-        $filepath = "$tmpDirectory/$filename";
-        $content = uniqid();
-        file_put_contents($filepath, $content);
-        $filesystem = new Filesystem(new LocalFilesystemAdapter($tmpDirectory));
-        $serializer = new SerializerTest();
-        $fileReceiver = new FileReceiver($filesystem, $serializer);
-        $envelopes = $fileReceiver->get();
-        $this->assertCount(1, $envelopes);
-        $envelopes = is_array($envelopes) ? $envelopes : [...$envelopes];
-        $envelope = array_shift($envelopes);
-        $fileReceiver->reject($envelope);
-        $fileContent = file_get_contents($filepath);
-        $this->assertFalse($fileContent);
-    }
-
-    public function testAll(): void
-    {
-        $tmpDirectory = sys_get_temp_dir() . '/symfony-test';
-        $filename = uniqid();
-        $filepath = "$tmpDirectory/$filename";
-        $content = uniqid();
-        file_put_contents($filepath, $content);
-        $filename = uniqid();
-        $filepath = "$tmpDirectory/$filename";
-        $content = uniqid();
-        file_put_contents($filepath, $content);
-        $filename = uniqid();
-        $filepath = "$tmpDirectory/$filename";
-        $content = uniqid();
-        file_put_contents($filepath, $content);
-        $filesystem = new Filesystem(new LocalFilesystemAdapter($tmpDirectory));
-        $serializer = new SerializerTest();
-        $fileReceiver = new FileReceiver($filesystem, $serializer);
-        $envelopes = $fileReceiver->all();
-        $this->assertCount(3, [...$envelopes]);
-    }
-
-    public function testFind(): void
-    {
-        $tmpDirectory = sys_get_temp_dir() . '/symfony-test';
-        $filename = uniqid();
-        $filepath = "$tmpDirectory/$filename";
-        $content = uniqid();
-        file_put_contents($filepath, $content);
-        $filesystem = new Filesystem(new LocalFilesystemAdapter($tmpDirectory));
-        $serializer = new SerializerTest();
-        $fileReceiver = new FileReceiver($filesystem, $serializer);
-        $envelope = $fileReceiver->find($filename);
-        $this->assertNotNull($envelope);
-        $envelope = $fileReceiver->find(uniqid());
-        $this->assertNull($envelope);
-    }
-
-    public function testGetMessageCount(): void
-    {
-        $tmpDirectory = sys_get_temp_dir() . '/symfony-test';
-        $filename = uniqid();
-        $filepath = "$tmpDirectory/$filename";
-        $content = uniqid();
-        file_put_contents($filepath, $content);
-        $filename = uniqid();
-        $filepath = "$tmpDirectory/$filename";
-        $content = uniqid();
-        file_put_contents($filepath, $content);
-        $filename = uniqid();
-        $filepath = "$tmpDirectory/$filename";
-        $content = uniqid();
-        file_put_contents($filepath, $content);
-        $filesystem = new Filesystem(new LocalFilesystemAdapter($tmpDirectory));
-        $serializer = new SerializerTest();
-        $fileReceiver = new FileReceiver($filesystem, $serializer);
-        $count = $fileReceiver->getMessageCount();
-        $this->assertEquals(3, $count);
+        $dsn = 'sftp://foo:bar@localhost:22/rootPath';
+        $fileTransportFactory = new FileTransportFactory();
+        $this->assertTrue($fileTransportFactory->supports($dsn, []));
+        $transport = $fileTransportFactory->createTransport($dsn, []);
+        $this->assertInstanceOf(FileTransport::class, $transport);
     }
 }

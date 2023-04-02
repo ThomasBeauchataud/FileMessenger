@@ -39,20 +39,11 @@ final class FileSender implements SenderInterface
     {
         try {
 
-            $filenameStamp = $envelope->last(FilenameStamp::class);
-
-            if (null === $filenameStamp || $this->filesystemOperator->has($filenameStamp->getFilename())) {
-                $filename = uniqid() . '.msg';
-            } else {
-                $filename = $filenameStamp->getFilename();
-            }
-
+            $filepath = uniqid(gmdate('YmdHis_'));
             $data = $this->serializer->encode($envelope);
             $fileContent = $data['body'];
-            $this->filesystemOperator->write($filename, $fileContent);
-
-            $envelope->with(new TransportMessageIdStamp($filename));
-            return $envelope;
+            $this->filesystemOperator->write($filepath, $fileContent);
+            return $envelope->with(new TransportMessageIdStamp($filepath));
 
         } catch (FilesystemException $e) {
             throw new TransportException($e->getMessage(), $e->getCode(), $e);

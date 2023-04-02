@@ -26,7 +26,8 @@ final class ChainedAdapterFactory implements FilesystemAdapterFactoryInterface
     {
         $this->filesystemAdapterFactories = [
             new LocalAdapterFactory(),
-            new SftpAdapterFactory()
+            new SftpAdapterFactory(),
+            new FtpAdapterFactory()
         ];
     }
 

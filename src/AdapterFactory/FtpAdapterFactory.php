@@ -15,32 +15,22 @@
 namespace TBCD\Messenger\FileTransport\AdapterFactory;
 
 use League\Flysystem\FilesystemAdapter;
-use League\Flysystem\PhpseclibV3\SftpAdapter;
-use League\Flysystem\PhpseclibV3\SftpConnectionProvider;
+use League\Flysystem\Ftp\FtpAdapter;
+use League\Flysystem\Ftp\FtpConnectionOptions;
 
-final class SftpAdapterFactory implements FilesystemAdapterFactoryInterface
+final class FtpAdapterFactory implements FilesystemAdapterFactoryInterface
 {
 
     public function support(string $dsn, array $options): bool
     {
         $urlData = parse_url($dsn);
-        return isset($urlData['scheme']) && $urlData['scheme'] === 'local';
+        return isset($urlData['scheme']) && $urlData['scheme'] === 'ftp';
     }
 
     public function create(string $dsn, array $options): FilesystemAdapter
     {
         $urlData = parse_url($dsn);
         $path = $options['path'] ?? parse_url($dsn)['path'] ?? '.';
-        return new SftpAdapter(
-            new SftpConnectionProvider(
-                $urlData['host'],
-                $urlData['user'],
-                $urlData['pass'],
-                null,
-                null,
-                $urlData['port']
-            ),
-            $path
-        );
+        return new FtpAdapter(new FtpConnectionOptions($urlData['host'], $urlData['user'], $path, $urlData['pass'], $urlData['port']));
     }
 }

@@ -24,23 +24,13 @@ final class SftpAdapterFactory implements FilesystemAdapterFactoryInterface
     public function support(string $dsn, array $options): bool
     {
         $urlData = parse_url($dsn);
-        return isset($urlData['scheme']) && $urlData['scheme'] === 'local';
+        return isset($urlData['scheme']) && $urlData['scheme'] === 'sftp';
     }
 
     public function create(string $dsn, array $options): FilesystemAdapter
     {
         $urlData = parse_url($dsn);
         $path = $options['path'] ?? parse_url($dsn)['path'] ?? '.';
-        return new SftpAdapter(
-            new SftpConnectionProvider(
-                $urlData['host'],
-                $urlData['user'],
-                $urlData['pass'],
-                null,
-                null,
-                $urlData['port']
-            ),
-            $path
-        );
+        return new SftpAdapter(new SftpConnectionProvider($urlData['host'], $urlData['user'], $urlData['pass'], null, null, $urlData['port']), $path);
     }
 }

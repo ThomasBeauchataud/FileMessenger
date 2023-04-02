@@ -17,10 +17,11 @@ namespace TBCD\Messenger\FileTransport\Tests;
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use PHPUnit\Framework\TestCase;
-use TBCD\Messenger\FileTransport\FileReceivedStamp;
-use TBCD\Messenger\FileTransport\FileReceiver;
+use Symfony\Component\Messenger\Envelope;
+use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
+use TBCD\Messenger\FileTransport\FileSender;
 
-class FileReceiverTest extends TestCase
+class FileSenderTest extends TestCase
 {
 
     protected function setUp(): void
@@ -34,131 +35,19 @@ class FileReceiverTest extends TestCase
         }
     }
 
-    public function testGet(): void
+    public function testSend(): void
     {
         $tmpDirectory = sys_get_temp_dir() . '/symfony-test';
-        $filename = uniqid();
-        $filepath = "$tmpDirectory/$filename";
         $content = uniqid();
-        file_put_contents($filepath, $content);
-
+        $envelope = new Envelope(new MessageTest($content));
         $filesystem = new Filesystem(new LocalFilesystemAdapter($tmpDirectory));
         $serializer = new SerializerTest();
-        $fileReceiver = new FileReceiver($filesystem, $serializer);
-        $envelopes = $fileReceiver->get();
-        $this->assertCount(1, $envelopes);
-        $envelopes = is_array($envelopes) ? $envelopes : [...$envelopes];
-        $envelope = array_shift($envelopes);
-        $message = $envelope->getMessage();
-        $this->assertEquals($content, $message->getContent());
-
-        $fileReceivedStamp = $envelope->last(FileReceivedStamp::class);
-        $this->assertNotNull($fileReceivedStamp);
-        $this->assertEquals($filename, $fileReceivedStamp->getFilepath());
-    }
-
-    public function testAck(): void
-    {
-        $tmpDirectory = sys_get_temp_dir() . '/symfony-test';
-        $filename = uniqid();
+        $fileReceiver = new FileSender($filesystem, $serializer);
+        $envelope = $fileReceiver->send($envelope);
+        $transportMessageIdStamp = $envelope->last(TransportMessageIdStamp::class);
+        $this->assertNotNull($transportMessageIdStamp);
+        $filename = $transportMessageIdStamp->getId();
         $filepath = "$tmpDirectory/$filename";
-        $content = uniqid();
-        file_put_contents($filepath, $content);
-
-        $filesystem = new Filesystem(new LocalFilesystemAdapter($tmpDirectory));
-        $serializer = new SerializerTest();
-        $fileReceiver = new FileReceiver($filesystem, $serializer);
-        $envelopes = $fileReceiver->get();
-        $this->assertCount(1, $envelopes);
-        $envelopes = is_array($envelopes) ? $envelopes : [...$envelopes];
-        $envelope = array_shift($envelopes);
-
-        $fileReceiver->ack($envelope);
-        $fileContent = file_get_contents($filepath);
-        $this->assertFalse($fileContent);
-    }
-
-    public function testReject(): void
-    {
-        $tmpDirectory = sys_get_temp_dir() . '/symfony-test';
-        $filename = uniqid();
-        $filepath = "$tmpDirectory/$filename";
-        $content = uniqid();
-        file_put_contents($filepath, $content);
-
-        $filesystem = new Filesystem(new LocalFilesystemAdapter($tmpDirectory));
-        $serializer = new SerializerTest();
-        $fileReceiver = new FileReceiver($filesystem, $serializer);
-        $envelopes = $fileReceiver->get();
-        $this->assertCount(1, $envelopes);
-        $envelopes = is_array($envelopes) ? $envelopes : [...$envelopes];
-        $envelope = array_shift($envelopes);
-
-        $fileReceiver->reject($envelope);
-        $fileContent = file_get_contents($filepath);
-        $this->assertFalse($fileContent);
-    }
-
-    public function testAll(): void
-    {
-        $tmpDirectory = sys_get_temp_dir() . '/symfony-test';
-        $filename = uniqid();
-        $filepath = "$tmpDirectory/$filename";
-        $content = uniqid();
-        file_put_contents($filepath, $content);
-        $filename = uniqid();
-        $filepath = "$tmpDirectory/$filename";
-        $content = uniqid();
-        file_put_contents($filepath, $content);
-        $filename = uniqid();
-        $filepath = "$tmpDirectory/$filename";
-        $content = uniqid();
-        file_put_contents($filepath, $content);
-
-        $filesystem = new Filesystem(new LocalFilesystemAdapter($tmpDirectory));
-        $serializer = new SerializerTest();
-        $fileReceiver = new FileReceiver($filesystem, $serializer);
-        $envelopes = $fileReceiver->all();
-        $this->assertCount(3, [...$envelopes]);
-    }
-
-    public function testFind(): void
-    {
-        $tmpDirectory = sys_get_temp_dir() . '/symfony-test';
-        $filename = uniqid();
-        $filepath = "$tmpDirectory/$filename";
-        $content = uniqid();
-        file_put_contents($filepath, $content);
-
-        $filesystem = new Filesystem(new LocalFilesystemAdapter($tmpDirectory));
-        $serializer = new SerializerTest();
-        $fileReceiver = new FileReceiver($filesystem, $serializer);
-        $envelope = $fileReceiver->find($filename);
-        $this->assertNotNull($envelope);
-        $envelope = $fileReceiver->find(uniqid());
-        $this->assertNull($envelope);
-    }
-
-    public function testGetMessageCount(): void
-    {
-        $tmpDirectory = sys_get_temp_dir() . '/symfony-test';
-        $filename = uniqid();
-        $filepath = "$tmpDirectory/$filename";
-        $content = uniqid();
-        file_put_contents($filepath, $content);
-        $filename = uniqid();
-        $filepath = "$tmpDirectory/$filename";
-        $content = uniqid();
-        file_put_contents($filepath, $content);
-        $filename = uniqid();
-        $filepath = "$tmpDirectory/$filename";
-        $content = uniqid();
-        file_put_contents($filepath, $content);
-
-        $filesystem = new Filesystem(new LocalFilesystemAdapter($tmpDirectory));
-        $serializer = new SerializerTest();
-        $fileReceiver = new FileReceiver($filesystem, $serializer);
-        $count = $fileReceiver->getMessageCount();
-        $this->assertEquals(3, $count);
+        $this->assertEquals($content, file_get_contents($filepath));
     }
 }

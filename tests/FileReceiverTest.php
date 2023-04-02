@@ -41,7 +41,6 @@ class FileReceiverTest extends TestCase
         $filepath = "$tmpDirectory/$filename";
         $content = uniqid();
         file_put_contents($filepath, $content);
-
         $filesystem = new Filesystem(new LocalFilesystemAdapter($tmpDirectory));
         $serializer = new SerializerTest();
         $fileReceiver = new FileReceiver($filesystem, $serializer);
@@ -51,7 +50,6 @@ class FileReceiverTest extends TestCase
         $envelope = array_shift($envelopes);
         $message = $envelope->getMessage();
         $this->assertEquals($content, $message->getContent());
-
         $fileReceivedStamp = $envelope->last(FileReceivedStamp::class);
         $this->assertNotNull($fileReceivedStamp);
         $this->assertEquals($filename, $fileReceivedStamp->getFilepath());
@@ -64,7 +62,6 @@ class FileReceiverTest extends TestCase
         $filepath = "$tmpDirectory/$filename";
         $content = uniqid();
         file_put_contents($filepath, $content);
-
         $filesystem = new Filesystem(new LocalFilesystemAdapter($tmpDirectory));
         $serializer = new SerializerTest();
         $fileReceiver = new FileReceiver($filesystem, $serializer);
@@ -72,7 +69,6 @@ class FileReceiverTest extends TestCase
         $this->assertCount(1, $envelopes);
         $envelopes = is_array($envelopes) ? $envelopes : [...$envelopes];
         $envelope = array_shift($envelopes);
-
         $fileReceiver->ack($envelope);
         $fileContent = file_get_contents($filepath);
         $this->assertFalse($fileContent);
@@ -85,7 +81,6 @@ class FileReceiverTest extends TestCase
         $filepath = "$tmpDirectory/$filename";
         $content = uniqid();
         file_put_contents($filepath, $content);
-
         $filesystem = new Filesystem(new LocalFilesystemAdapter($tmpDirectory));
         $serializer = new SerializerTest();
         $fileReceiver = new FileReceiver($filesystem, $serializer);
@@ -93,7 +88,6 @@ class FileReceiverTest extends TestCase
         $this->assertCount(1, $envelopes);
         $envelopes = is_array($envelopes) ? $envelopes : [...$envelopes];
         $envelope = array_shift($envelopes);
-
         $fileReceiver->reject($envelope);
         $fileContent = file_get_contents($filepath);
         $this->assertFalse($fileContent);
@@ -114,7 +108,6 @@ class FileReceiverTest extends TestCase
         $filepath = "$tmpDirectory/$filename";
         $content = uniqid();
         file_put_contents($filepath, $content);
-
         $filesystem = new Filesystem(new LocalFilesystemAdapter($tmpDirectory));
         $serializer = new SerializerTest();
         $fileReceiver = new FileReceiver($filesystem, $serializer);
@@ -129,7 +122,6 @@ class FileReceiverTest extends TestCase
         $filepath = "$tmpDirectory/$filename";
         $content = uniqid();
         file_put_contents($filepath, $content);
-
         $filesystem = new Filesystem(new LocalFilesystemAdapter($tmpDirectory));
         $serializer = new SerializerTest();
         $fileReceiver = new FileReceiver($filesystem, $serializer);
@@ -154,7 +146,6 @@ class FileReceiverTest extends TestCase
         $filepath = "$tmpDirectory/$filename";
         $content = uniqid();
         file_put_contents($filepath, $content);
-
         $filesystem = new Filesystem(new LocalFilesystemAdapter($tmpDirectory));
         $serializer = new SerializerTest();
         $fileReceiver = new FileReceiver($filesystem, $serializer);

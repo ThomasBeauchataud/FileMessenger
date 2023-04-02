@@ -18,9 +18,11 @@ use League\Flysystem\FilesystemException;
 use League\Flysystem\FilesystemOperator;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\TransportException;
+use Symfony\Component\Messenger\Stamp\TransportMessageIdStamp;
 use Symfony\Component\Messenger\Transport\Receiver\ListableReceiverInterface;
 use Symfony\Component\Messenger\Transport\Receiver\MessageCountAwareInterface;
 use Symfony\Component\Messenger\Transport\Receiver\ReceiverInterface;
+use Symfony\Component\Messenger\Transport\Serialization\PhpSerializer;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 
 final class FileReceiver implements ReceiverInterface, ListableReceiverInterface, MessageCountAwareInterface
@@ -29,7 +31,7 @@ final class FileReceiver implements ReceiverInterface, ListableReceiverInterface
     private FilesystemOperator $filesystemOperator;
     private ?SerializerInterface $serializer;
 
-    public function __construct(FilesystemOperator $filesystemOperator, SerializerInterface $serializer)
+    public function __construct(FilesystemOperator $filesystemOperator, SerializerInterface $serializer = new PhpSerializer())
     {
         $this->filesystemOperator = $filesystemOperator;
         $this->serializer = $serializer;
@@ -39,13 +41,16 @@ final class FileReceiver implements ReceiverInterface, ListableReceiverInterface
     public function get(): iterable
     {
         try {
+
             foreach ($this->filesystemOperator->listContents('/') as $file) {
                 if (false === $file->isFile()) {
                     continue;
                 }
                 return [$this->getEnvelopeFromFilepath($file->path())];
             }
+
             return [];
+
         } catch (FilesystemException $e) {
             throw new TransportException($e->getMessage(), $e->getCode(), $e);
         }
@@ -54,9 +59,11 @@ final class FileReceiver implements ReceiverInterface, ListableReceiverInterface
     public function ack(Envelope $envelope): void
     {
         $fileReceivedStamp = $envelope->last(FileReceivedStamp::class);
+
         if (null === $fileReceivedStamp) {
             return;
         }
+
         try {
             $this->filesystemOperator->delete($fileReceivedStamp->getFilepath());
         } catch (FilesystemException $e) {
@@ -67,9 +74,11 @@ final class FileReceiver implements ReceiverInterface, ListableReceiverInterface
     public function reject(Envelope $envelope): void
     {
         $fileReceivedStamp = $envelope->last(FileReceivedStamp::class);
+
         if (null === $fileReceivedStamp) {
             return;
         }
+
         try {
             $this->filesystemOperator->delete($fileReceivedStamp->getFilepath());
         } catch (FilesystemException $e) {
@@ -80,12 +89,14 @@ final class FileReceiver implements ReceiverInterface, ListableReceiverInterface
     public function all(int $limit = null): iterable
     {
         try {
+
             foreach ($this->filesystemOperator->listContents('/') as $file) {
                 if (false === $file->isFile()) {
                     continue;
                 }
                 yield $this->getEnvelopeFromFilepath($file->path());
             }
+
         } catch (FilesystemException $e) {
             throw new TransportException($e->getMessage(), $e->getCode(), $e);
         }
@@ -94,13 +105,16 @@ final class FileReceiver implements ReceiverInterface, ListableReceiverInterface
     public function find(mixed $id): ?Envelope
     {
         try {
+
             foreach ($this->filesystemOperator->listContents('/') as $file) {
                 if (false === $file->isFile() || $file->path() !== $id) {
                     continue;
                 }
                 return $this->getEnvelopeFromFilepath($file->path());
             }
+
             return null;
+
         } catch (FilesystemException $e) {
             throw new TransportException($e->getMessage(), $e->getCode(), $e);
         }
@@ -119,6 +133,6 @@ final class FileReceiver implements ReceiverInterface, ListableReceiverInterface
     {
         $fileContent = $this->filesystemOperator->read($filepath);
         $envelope = $this->serializer->decode(['body' => $fileContent, 'headers' => []]);
-        return $envelope->with(new FileReceivedStamp($filepath));
+        return $envelope->with(new FileReceivedStamp($filepath), new TransportMessageIdStamp($filepath));
     }
 }
