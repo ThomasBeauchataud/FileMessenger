@@ -7,11 +7,6 @@
             "name": "Thomas Beauchataud"
         }
     ],
-    "keywords": [
-        "HFSQL",
-        "Doctrine",
-        "ODBC"
-    ],
     "license": "MIT",
     "minimum-stability": "stable",
     "prefer-stable": true,
